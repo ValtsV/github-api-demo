@@ -36,7 +36,7 @@ public class GithubConnect {
             user.getRepositories();
 
             for (Map.Entry<String, org.kohsuke.github.GHRepository> entry : user.getRepositories().entrySet()) {
-                System.out.println(entry.getKey() + "/" + entry.getValue().getName());
+                System.out.println(entry.getKey());
 
 
                 if (entry.getValue().getSize() != 0) {
@@ -45,7 +45,7 @@ public class GithubConnect {
 
 
                     Iterator<GHCommit> iterator = commits.iterator();
-                    String sha = "";
+                    String sha = "";    // Para guardar el sha de ultimo commit
                     while (iterator.hasNext()) {
                         GHCommit commit = iterator.next();
 
@@ -56,11 +56,16 @@ public class GithubConnect {
 
                     HashMap<String, Integer> fileCount = new HashMap<>();
                     var x = entry.getValue().getCommit(sha).getFiles();
-                    Iterator<GHCommit.File> iter = x.iterator();
-                    while (iter.hasNext()) {
-                        GHCommit.File lol = iter.next();
+                    for (GHCommit.File lol : x) {
                         String fileName = lol.getFileName();
-                        String fileExtension = fileName.substring(fileName.lastIndexOf(".")+1);
+                        String fileNameSubstring = fileName.substring(fileName.lastIndexOf("/") + 1);
+                        String fileExtension = "";
+                        if (fileNameSubstring.contains(".")) {
+                            fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1);
+                        } else {
+                            fileExtension = fileNameSubstring;
+                        }
+
                         if (!fileCount.containsKey(fileExtension)) {
                             fileCount.put(fileExtension, 1);
                         } else {
@@ -68,33 +73,31 @@ public class GithubConnect {
                         }
 
 
-                        System.out.println(lol.getRawUrl());
+
                         URL url = lol.getRawUrl();
-                        StringBuilder sb = new StringBuilder();
-                        String line;
 
                         int count = 0;
                         InputStream in = url.openStream();
                         try {
 
                             BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-                            while ((line = reader.readLine()) != null) {
+                            while ((reader.readLine()) != null) {
                                 count++;
                             }
                         } finally {
                             in.close();
                         }
-
-                        System.out.println(count);
+                        System.out.println(lol.getFileName() + " -> tiene " + count + " lineas");
                     }
 
 //                    System.out.println(fileCount.get("java"));
+                    System.out.println("Este repo tiene estos ficheros:");
                     fileCount.entrySet().forEach(file -> {
-                        System.out.println(file.getKey() + " " + file.getValue());
+                        System.out.println(file.getValue() + " de " + file.getKey());
                     });
 
                 } else {
-                    System.out.println("No commits yet");
+                    System.out.println("No tiene ningun commit");
                 }
 //
 
